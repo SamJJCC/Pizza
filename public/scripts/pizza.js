@@ -23,6 +23,26 @@ document.getElementById("pizza-form").onsubmit = () => {
     return isValid;
 };
 
+// validate method:pickup or delivery
+let methodSelected=false;
+let methodButtons=document.getElementsByName("method");
+for(let i=0; i<methodButtons.length; i++){
+    if(methodButtons[i].checked){
+        methodSelected=true;
+    }
+}
+
+if(!methodSelected){
+    document.getElementById("err-method").style.display="block";
+    isValid=false;
+}
+
+let size=document.getElementById("size").value;
+if(size == "none"){
+    document.getElementById("err-size").style.display="block";
+    isValid=false;
+}
+
 function clearErrors() {
     let errors = document.getElementsByClassName("err");
     for (let i=0; i<errors.length; i++) {

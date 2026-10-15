@@ -1,0 +1,24 @@
+{
+  "name": "pizza",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SamJJCC/Pizza.git"
+  },
+  "keywords": [],
+  "type": "module",
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SamJJCC/Pizza/issues"
+  },
+  "homepage": "https://github.com/SamJJCC/Pizza#readme",
+  "description": "",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
