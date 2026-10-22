@@ -49,6 +49,13 @@ app.post('/submit-order',(req,res)=>{
     res.sendFile(`${import.meta.dirname}/views/confirm.html`)
 });
 
+app.get('/admin',(req,res)=>{
+
+    // res.send('welcome to poppa\'s pizza');
+
+    res.send(orders);
+}); 
+
 
 
 
