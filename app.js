@@ -13,27 +13,31 @@ const orders=[];
 // enable static file serving
 app.use(express.static('public'));
 
+
+
 // add middleware to allow the app to parse form data
 app.use(express.urlencoded({extended:true}));
+//set view engine
+app.set('view engine','ejs');
 
 //define a default route
 app.get('/',(req,res)=>{
 
     // res.send('welcome to poppa\'s pizza');
 
-    res.sendFile(`${import.meta.dirname}/views/home.html`)
+    res.render('home');
 }); 
 
 app.get('/contact',(req,res)=>{
-    res.sendFile(`${import.meta.dirname}/views/contact.html`)
+    res.render('contact')
 });
 
-app.get('/confirm-order',(req,res)=>{
-    res.sendFile(`${import.meta.dirname}/views/confirm.html`)
-});
+// app.get('/confirm-order',(req,res)=>{
+//     res.render('confirm')
+// });
 
 app.get('/menu',(req,res)=>{
-    res.sendFile(`${import.meta.dirname}/views/menu.html`)
+    res.render('menu');
 });
 
 
@@ -46,14 +50,14 @@ app.post('/submit-order',(req,res)=>{
     // add order object to orders array
     orders.push(order);
     console.log(orders);
-    res.sendFile(`${import.meta.dirname}/views/confirm.html`)
+    res.render('confirm',{order});
 });
 
 app.get('/admin',(req,res)=>{
 
     // res.send('welcome to poppa\'s pizza');
 
-    res.send(orders);
+    res.render('admin',{orders});
 }); 
 
 
