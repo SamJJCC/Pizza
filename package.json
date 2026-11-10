@@ -19,7 +19,9 @@
   "homepage": "https://github.com/SamJJCC/Pizza#readme",
   "description": "",
   "dependencies": {
+    "dotenv": "^18.0.10",
     "ejs": "^7.0.2",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "mysql2": "^3.24.6"
   }
 }

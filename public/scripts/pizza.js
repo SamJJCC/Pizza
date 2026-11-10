@@ -20,11 +20,7 @@ document.getElementById("pizza-form").onsubmit = () => {
     }
 
     // Do not submit the form if data is in-valid
-    return isValid;
-};
-
-// validate method:pickup or delivery
-let methodSelected=false;
+    let methodSelected=false;
 let methodButtons=document.getElementsByName("method");
 for(let i=0; i<methodButtons.length; i++){
     if(methodButtons[i].checked){
@@ -42,6 +38,11 @@ if(size == "none"){
     document.getElementById("err-size").style.display="block";
     isValid=false;
 }
+    return isValid;
+};
+
+// validate method:pickup or delivery
+
 
 function clearErrors() {
     let errors = document.getElementsByClassName("err");
