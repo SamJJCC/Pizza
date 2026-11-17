@@ -43,7 +43,7 @@ body{
     font-size: 1rem;
 }
 
-input[type="text"],input[type="email"],select,textarea{
+input[type="text"],input[type="email"],input[type="password"],select,textarea{
     width:100%;
     border:1.5px solid darkgreen;
     border-radius: .25em;
@@ -75,4 +75,9 @@ textarea{
 .err{
     color:darkred;
     display:none;
+}
+
+.login-error{
+    color:darkred;
+    font-weight: bold;
 }

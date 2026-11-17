@@ -1,82 +1,149 @@
-//import the express module
+// Import the express module
 import express from 'express';
-//import mysql
+
+// Import mysql
 import mysql2 from 'mysql2';
+import session from 'express-session';
+
+// Import .env
 import dotenv from 'dotenv';
 dotenv.config();
-//create a connection "pool"
-const pool=mysql2.createPool({
-    host:process.env.DB_HOST, 
-    user:process.env.DB_USER,
+
+// Create a connection pool
+const pool = mysql2.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port:process.env.DB_PORT
+    port: process.env.DB_PORT
 }).promise();
 
+// Create an instance of an
+// express application
+const app = express();
+
+app.use(session({
+    secret:process.env.SESSION_SECRET,
+    resave:false,
+    saveUninitialized:false,
+    cookie:{maxAge:1000*60*60}
+}))
 
 
-//create an instance of an express app
-const app=express();
-// define port number
-const PORT=3000;
-// create an array to store orders
-const orders=[];
+function requireLogin(req,res,next){
+    if(req.session.loggedIn){
+        next();
+    }else{
+        res.redirect('/login');
+    }
+}
 
 
 
-// enable static file serving
+
+// Define a port number for
+// our server to listen on
+const PORT = 3000;
+
+// Create an array to store orders
+const orders = [];
+
+// Enable static file serving
 app.use(express.static('public'));
 
+// Add "middleware" to allow the app to parse form data
+// Access form data through req.body
+app.use(express.urlencoded({ extended: true }));
 
+// Set view engine to EJS
+app.set('view engine', 'ejs');
 
-// add middleware to allow the app to parse form data
-app.use(express.urlencoded({extended:true}));
-//set view engine
-app.set('view engine','ejs');
-
-
-//create a route to test the data base
-app.get('/db-test',async(req,res)=> {
-    try{
-        const orders=await pool.query('SELECT * FROM orders');
-        res.send(orders[0]);
-    }catch(err){
-        console.error('Database error: ',err);
-        res.status(500).send('Database error occured');
+// Create a route to test the database
+/*
+app.get('/db-test', async(req, res) => {
+    try {
+        const [orders] = await 
+            pool.query('SELECT * FROM orders');
+        res.send(orders);
+    } catch(err) {
+        console.error('Database error: ', err);
+        res.status(500).send('Database error occurred.');
     }
-})
+});
+*/
 
-
-
-//define a default route
-app.get('/',(req,res)=>{
-
-    // res.send('welcome to poppa\'s pizza');
-
+// Define a default route ("/")
+app.get('/', (req, res) => {
+    //res.send('Welcome to Poppa\'s Pizza');
     res.render('home');
-}); 
-
-app.get('/contact',(req,res)=>{
-    res.render('contact')
 });
 
-// app.get('/confirm-order',(req,res)=>{
-//     res.render('confirm')
-// });
-
-app.get('/menu',(req,res)=>{
-    res.render('menu');
+// Add a contact route to display a contact view page
+app.get('/contact-us', (req, res) => {
+    res.render('contact');
 });
 
 
-app.post('/submit-order',async(req,res)=>{
-    // create a json object to store order data
-    const order=req.body;
-    order['timestamp']=new Date();
+//login 
+app.get('/login', (req, res) => {
+    res.render('login',{error:null});
+});
+
+app.post('/login', (req, res) => {
+ 
+    // Get the values the user typed into the form
+    const username = req.body.username;
+    const password = req.body.password;
+ 
+    // Compare them to the username and password stored in .env
+    if (username === process.env.ADMIN_USER &&
+        password === process.env.ADMIN_PASSWORD) {
+ 
+        // Correct! Remember that this user is logged in
+        req.session.loggedIn = true;
+ 
+        // Send them to the admin page
+        res.redirect('/admin');
+ 
+    } else {
+        // Wrong username or password - show the form again with an error
+        // Note: we don't say WHICH one was wrong. That would give an
+        // attacker a hint (e.g., "the username is right, keep guessing").
+        res.render('login', { error: 'Invalid username or password.' });
+    }
+});
+
+// Log out - http://localhost:3000/logout
+// req.session.destroy() deletes the session from the server.
+// When it's finished, we send the user back to the login page.
+app.get('/logout', (req, res) => {
+    req.session.destroy(() => {
+        res.redirect('/login');
+    });
+});
+
+
+
+
+// Add a route to process a pizza order
+app.post('/submit-order', async(req, res) => {
+
+    // Create a JSON object to store order data
+    const order = req.body;
+    order.timestamp = new Date();
     console.log(order);
-    const sql= 'INSERT INTO orders (fname,lname,email,size,method,toppings,comment)VALUES(?,?,?,?,?,?,?)';
-    //create an array of parameters from order data
-    const params=[
+
+    // Convert toppings array to a comma-delimited string
+    order.toppings = Array.isArray(order.toppings) ?
+        order.toppings.join(", ") : "";
+
+    // Define an SQL query to INSERT new order
+    const sql = `INSERT INTO orders (fname, lname, email,
+    size, method, toppings, comment)
+    VALUES(?, ?, ?, ?, ?, ?, ?)`;
+
+    // Create an array of parameters from order data
+    const params = [
         order.fname,
         order.lname,
         order.email,
@@ -86,30 +153,34 @@ app.post('/submit-order',async(req,res)=>{
         order.comment
     ];
 
-    //execute the query
-    const [result]=await pool.execute(sql,params);
+    // Execute the query
+    const [result] = await pool.execute(sql, params);
 
-    res.render('confirm',{order});
+    // Get the id from the newly inserted row
+    order.id = result.insertId;
+    console.log("A new row was inserted with ID " + order.id);
+
+    // Display the confirmation page
+    res.render('confirm', { order });
 });
 
-app.get('/admin',async(req,res)=>{
-
-     try{
-        const orders=await pool.query('SELECT * FROM orders');
-        console.log(orders[0]);
-        res.render('admin',{orders:orders[0]});
-    }catch(err){
-        console.error('Database error: ',err);
-        res.status(500).send('Database error occured');
+// Add an admin route
+app.get('/admin', requireLogin, async(req, res) => {
+    try {
+        
+        // Array destructuring gives us just the data from the query
+        const [orders] = await 
+            pool.query('SELECT * FROM orders ORDER BY timestamp DESC');
+        console.log(orders);
+        res.render('admin', { orders });
+    } catch(err) {
+        console.error('Database error: ', err);
+        res.status(500).send('Database error occurred.');
     }
+});
 
-    
-}); 
-
-
-
-
-// start the server on the designated port
-app.listen(PORT,()=>{
-    console.log(`server is running at http://localhost:${PORT}`);
-})
+// Start the server on the designated port
+app.listen(PORT, () => {
+    console.log(`Server is running at 
+        http://localhost:${PORT}`);
+});
